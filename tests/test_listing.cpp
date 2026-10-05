@@ -57,14 +57,18 @@ TEST(listing_describes_every_airspy) {
     CHECK_EQ(fern::json::serialize(devices->items()[0]),
              std::string("{\"index\":0,\"family\":\"airspy\",\"name\":\"Airspy R2\",\"serial\":\"26D464DC2A8E7A2B\","
                          "\"port\":\"1-2\",\"firmware\":\"AirSpy NOS v1.0.0-rc10-6-g4008185 2020-05-08\","
-                         "\"rates\":[10000000,2500000],\"usable\":true}"));
+                         "\"tuning\":{\"ranges\":[[24000000,1800000000]],\"rates\":[10000000,2500000],"
+                         "\"signal\":\"iq\"},\"rates\":[10000000,2500000],\"usable\":true}"));
     CHECK_EQ(fern::json::serialize(devices->items()[1]),
              std::string("{\"index\":1,\"family\":\"airspy\",\"name\":\"Airspy Mini\",\"serial\":\"0000000000000002\","
                          "\"port\":\"1-2.4\",\"firmware\":\"AirSpy MINI v1.0.0-rc10-6-g4008185 2020-05-08\","
-                         "\"rates\":[6000000,3000000],\"usable\":true}"));
+                         "\"tuning\":{\"ranges\":[[24000000,1800000000]],\"rates\":[6000000,3000000],"
+                         "\"signal\":\"iq\"},\"rates\":[6000000,3000000],\"usable\":true}"));
     CHECK_EQ(fern::json::serialize(devices->items()[2]),
              std::string("{\"index\":2,\"family\":\"airspyhf\",\"name\":\"Airspy HF+ Discovery\","
                          "\"serial\":\"3652A98081830F1E\",\"port\":\"1-3\",\"firmware\":\"R3.0.7-CD\","
+                         "\"tuning\":{\"ranges\":[[9000,31000000],[60000000,260000000]],"
+                         "\"rates\":[912000,768000,456000,384000,256000,192000],\"signal\":\"iq\"},"
                          "\"rates\":[912000,768000,456000,384000,256000,192000],\"usable\":true}"));
     // One the receiver may not open cannot tell its serial, and says what to do.
     CHECK_EQ(fern::json::serialize(devices->items()[3]),

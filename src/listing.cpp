@@ -99,6 +99,23 @@ json::Value examine(Backend& backend, const Found& found, uint32_t index, size_t
     json::Value list = json::Value::array();
     for (uint32_t r : rates)
         list.push(r);
+    // What this one radio tunes and at which rates, for FernSDR's setup: the
+    // manifest's block covers both families at once, and an R2 and a Mini
+    // share a USB id but not their rates.
+    if (!rates.empty()) {
+        json::Value ranges = json::Value::array();
+        if (found.family == Family::one) {
+            ranges.push(json::Value::array().push(24000000.0).push(1800000000.0));
+        } else {
+            ranges.push(json::Value::array().push(9000.0).push(31000000.0));
+            ranges.push(json::Value::array().push(60000000.0).push(260000000.0));
+        }
+        json::Value tuning = json::Value::object();
+        tuning.set("ranges", std::move(ranges));
+        tuning.set("rates", list);
+        tuning.set("signal", "iq");
+        d.set("tuning", std::move(tuning));
+    }
     d.set("rates", std::move(list));
     d.set("usable", true);
     return d;
@@ -187,7 +204,7 @@ std::string report_text(const json::Value& report) {
         for (const json::Value& d : list->items()) {
             json::Value slim = json::Value::object();
             for (const json::Member& m : d.members())
-                if (m.key != "rates" && m.key != "firmware")
+                if (m.key != "rates" && m.key != "firmware" && m.key != "tuning")
                     slim.set(m.key, m.value);
             kept.push_back(std::move(slim));
         }
