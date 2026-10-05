@@ -513,7 +513,7 @@ SessionResult Session::shut_down() {
     // control transfers either, and closing would wait out a 500 ms timeout
     // for each of them. The kernel releases it when the process exits.
     if (device_stalled_) {
-        receiver_.abandon();
+        receiver_.drop_device();
     } else if (!receiver_.close_by(std::max(deadline, Clock::now() + std::chrono::milliseconds(250)),
                                    !device_lost_)) {
         log_line("closing the Airspy did not finish in time; exiting without waiting for it");

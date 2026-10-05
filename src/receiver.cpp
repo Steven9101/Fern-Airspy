@@ -278,6 +278,15 @@ std::optional<Failure> Receiver::select(const DeviceSelector& selector, Found& f
     if (!found.has_serial)
         return Failure{ErrorCode::usb, what + " reports no serial number that the Airspy library can open it by; "
                                               "unplug it and plug it in again"};
+    // The vendor libraries take serial 0 to mean the first device they find.
+    if (found.serial == 0) {
+        size_t same = 0;
+        for (const Found& d : e.devices)
+            same += d.family == found.family;
+        if (same > 1)
+            return Failure{ErrorCode::usb, what + " reports the serial number 0, by which the Airspy library cannot "
+                                                  "tell it from the other Airspys; plug in only this one"};
+    }
     return std::nullopt;
 }
 
@@ -829,6 +838,14 @@ bool Receiver::close_by(std::chrono::steady_clock::time_point deadline, bool dev
 }
 
 void Receiver::abandon() {
+    // A vendor thread may still be inside the source's callback.
+    (void)source_.release();
+    (void)one_.release();
+    (void)hf_.release();
+    bias_on_by_module_ = false;
+}
+
+void Receiver::drop_device() {
     source_.reset();
     (void)one_.release();
     (void)hf_.release();

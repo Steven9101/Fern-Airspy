@@ -146,6 +146,25 @@ TEST(receiver_counts_devices_by_usb_port) {
     CHECK_EQ(rx.info().serial, 0xAAAAull);
 }
 
+TEST(receiver_opens_serial_0_only_when_it_is_alone) {
+    fake::Backend alone({r2(0)});
+    fern::Receiver rx(alone);
+    CHECK(!rx.open(request()));
+    fake::Spec zero = r2(0);
+    fake::Spec other = r2(0x1);
+    other.port = "1-3";
+    fake::Backend two({zero, other});
+    fern::Receiver rx2(two);
+    OpenRequest r = request();
+    r.settings.device.kind = fern::DeviceSelector::Kind::index;
+    r.settings.device.index = 0;
+    const auto f = rx2.open(r);
+    REQUIRE(f);
+    CHECK_HAS(f->message, "reports the serial number 0");
+    r.settings.device.index = 1;
+    CHECK(!rx2.open(r));
+}
+
 TEST(receiver_tells_a_beginner_about_permissions) {
     fake::Spec locked = r2();
     locked.open_error = fern::usb_error::access;

@@ -119,9 +119,13 @@ public:
     // finish (or hang) in a thread of its own; the process must then leave
     // with _exit(). Returns whether the close finished.
     bool close_by(std::chrono::steady_clock::time_point deadline, bool device_answers = true);
-    // Drops the device without closing it, for when another thread may still
-    // be inside the vendor library. The process must exit soon after.
+    // Drops the device and the source without closing or destroying them,
+    // for when another thread may still be inside the vendor library or the
+    // source's callback. The process must exit soon after.
     void abandon();
+    // Drops the device without closing it, once streaming has stopped, for
+    // a device that no longer answers and would make closing wait.
+    void drop_device();
 
 private:
     Backend& backend_;
