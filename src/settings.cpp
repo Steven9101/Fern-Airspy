@@ -119,6 +119,15 @@ bool same_word(const std::string& s, const char* word) {
     return i == s.size();
 }
 
+bool starts_without_case(std::string_view text, std::string_view prefix) {
+    if (text.size() < prefix.size())
+        return false;
+    for (size_t i = 0; i < prefix.size(); ++i)
+        if (std::tolower(static_cast<unsigned char>(text[i])) != std::tolower(static_cast<unsigned char>(prefix[i])))
+            return false;
+    return true;
+}
+
 int hex_digit(char c) {
     if (c >= '0' && c <= '9')
         return c - '0';
@@ -141,6 +150,15 @@ std::optional<Failure> parse_device(const json::Value& v, DeviceSelector& out) {
         sel.kind = DeviceSelector::Kind::only;
     } else if (s.rfind("serial:", 0) == 0) {
         std::string_view digits(s.data() + 7, s.size() - 7);
+        // FernSDR's own USB scan reads the serial string descriptor as it
+        // stands, "AIRSPY SN:" or "AIRSPYHF SN:" and the digits, and its
+        // setup writes that.
+        for (const std::string_view prefix : {std::string_view("AIRSPY SN:"), std::string_view("AIRSPYHF SN:")}) {
+            if (starts_without_case(digits, prefix)) {
+                digits.remove_prefix(prefix.size());
+                break;
+            }
+        }
         if (digits.size() > 2 && digits[0] == '0' && (digits[1] == 'x' || digits[1] == 'X'))
             digits.remove_prefix(2);
         if (digits.empty() || digits.size() > 16)

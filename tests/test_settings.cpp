@@ -87,13 +87,20 @@ TEST(settings_device_forms) {
     CHECK_EQ(r.settings.device.serial, 0x3652A98081830F1Eull);
     REQUIRE(!fern::parse_open(open_with("{\"device\":\"serial:12AB\"}"), r));
     CHECK_EQ(r.settings.device.serial, 0x12ABull);
+    // As FernSDR's setup writes it, from the USB serial string.
+    REQUIRE(!fern::parse_open(open_with("{\"device\":\"serial:AIRSPY SN:26D464DC2A8E7A2B\"}"), r));
+    CHECK_EQ(r.settings.device.serial, 0x26D464DC2A8E7A2Bull);
+    REQUIRE(!fern::parse_open(open_with("{\"device\":\"serial:AIRSPYHF SN:3652A98081830F1E\"}"), r));
+    CHECK_EQ(r.settings.device.serial, 0x3652A98081830F1Eull);
+    REQUIRE(!fern::parse_open(open_with("{\"device\":\"serial:airspyhf sn:0x12\"}"), r));
+    CHECK_EQ(r.settings.device.serial, 0x12ull);
     REQUIRE(!fern::parse_open(open_with("{\"device\":\"index:2\"}"), r));
     CHECK(r.settings.device.kind == fern::DeviceSelector::Kind::index);
     CHECK_EQ(r.settings.device.index, 2u);
     REQUIRE(!fern::parse_open(open_with("{\"device\":\"\"}"), r));
     CHECK(r.settings.device.kind == fern::DeviceSelector::Kind::only);
     for (const char* bad : {"\"serial:\"", "\"serial:0x\"", "\"serial:12345678901234567\"", "\"serial:12G4\"",
-                            "\"index:\"", "\"index:-1\"", "\"index:99999999999\"", "\"port:1-2\"", "3"}) {
+                            "\"serial:AIRSPY SN:\"", "\"serial:AIRSPY SN 12\"", "\"index:\"", "\"index:-1\"", "\"index:99999999999\"", "\"port:1-2\"", "3"}) {
         CHECK_HAS(refusal(open_with(std::string("{\"device\":") + bad + "}")), "module.device must be");
     }
 }

@@ -34,6 +34,10 @@ const char* usb_error_text(int code) {
     }
 }
 
+void order_by_port(std::vector<Found>& devices) {
+    std::stable_sort(devices.begin(), devices.end(), [](const Found& a, const Found& b) { return a.port < b.port; });
+}
+
 std::string serial_text(uint64_t serial) {
     char text[24];
     std::snprintf(text, sizeof text, "%016" PRIX64, serial);
@@ -184,7 +188,8 @@ const char* Receiver::format() const { return info_.family == Family::one ? "s16
 size_t Receiver::sample_bytes() const { return info_.family == Family::one ? 2 * sizeof(int16_t) : 2 * sizeof(float); }
 
 std::optional<Failure> Receiver::select(const DeviceSelector& selector, Found& found, uint32_t& index) {
-    const Enumeration e = backend_.enumerate();
+    Enumeration e = backend_.enumerate();
+    order_by_port(e.devices);
     if (e.error != 0)
         return Failure{ErrorCode::usb, e.diagnostic};
 

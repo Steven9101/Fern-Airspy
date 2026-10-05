@@ -98,7 +98,8 @@ json::Value examine(Backend& backend, const Found& found, uint32_t index) {
 }
 
 void list_into(Backend& backend, Shared& shared) {
-    const Enumeration e = backend.enumerate();
+    Enumeration e = backend.enumerate();
+    order_by_port(e.devices);
     {
         std::lock_guard<std::mutex> lock(shared.mutex);
         shared.enumeration = e;

@@ -24,7 +24,7 @@ TEST(listing_describes_every_airspy) {
     r2.serial = 0x26D464DC2A8E7A2Bull;
     fake::Spec mini;
     mini.serial = 0x2;
-    mini.port = "2-1.4";
+    mini.port = "1-2.4";
     mini.version = "AirSpy MINI v1.0.0-rc10-6-g4008185 2020-05-08";
     mini.one_rates = {6000000, 3000000};
     fake::Spec hf;
@@ -60,7 +60,7 @@ TEST(listing_describes_every_airspy) {
                          "\"rates\":[10000000,2500000],\"usable\":true}"));
     CHECK_EQ(fern::json::serialize(devices->items()[1]),
              std::string("{\"index\":1,\"family\":\"airspy\",\"name\":\"Airspy Mini\",\"serial\":\"0000000000000002\","
-                         "\"port\":\"2-1.4\",\"firmware\":\"AirSpy MINI v1.0.0-rc10-6-g4008185 2020-05-08\","
+                         "\"port\":\"1-2.4\",\"firmware\":\"AirSpy MINI v1.0.0-rc10-6-g4008185 2020-05-08\","
                          "\"rates\":[6000000,3000000],\"usable\":true}"));
     CHECK_EQ(fern::json::serialize(devices->items()[2]),
              std::string("{\"index\":2,\"family\":\"airspyhf\",\"name\":\"Airspy HF+ Discovery\","

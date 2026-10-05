@@ -120,6 +120,32 @@ TEST(receiver_picks_the_only_one_and_asks_among_several) {
     CHECK_HAS(g->message, "there is no Airspy at index 2");
 }
 
+// index:<n> counts in the order of the USB ports, as FernSDR's setup does,
+// not in the order libusb happens to find them.
+TEST(receiver_counts_devices_by_usb_port) {
+    fake::Spec later = hf(0xAAAA);
+    later.port = "3-1";
+    fake::Spec earlier = r2(0xBBBB);
+    earlier.port = "1-10";
+    fake::Spec middle = r2(0xCCCC);
+    middle.port = "1-2";
+    fake::Backend backend({later, earlier, middle});
+    fern::Receiver rx(backend);
+    OpenRequest r = request();
+    r.settings.device.kind = fern::DeviceSelector::Kind::index;
+    r.settings.device.index = 0;
+    REQUIRE(!rx.open(r));
+    CHECK_EQ(rx.info().serial, 0xBBBBull);
+    r.settings.device.index = 1;
+    REQUIRE(!rx.open(r));
+    CHECK_EQ(rx.info().serial, 0xCCCCull);
+    OpenRequest h = request(768000, 7100000);
+    h.settings.device.kind = fern::DeviceSelector::Kind::index;
+    h.settings.device.index = 2;
+    REQUIRE(!rx.open(h));
+    CHECK_EQ(rx.info().serial, 0xAAAAull);
+}
+
 TEST(receiver_tells_a_beginner_about_permissions) {
     fake::Spec locked = r2();
     locked.open_error = fern::usb_error::access;

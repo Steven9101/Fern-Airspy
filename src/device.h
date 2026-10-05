@@ -54,6 +54,11 @@ struct Enumeration {
     std::vector<Found> devices;
 };
 
+// Puts the devices in the order of their USB ports, as FernSDR's own USB
+// scan lists them, so that index:<n> means the same radio in its setup and
+// here, whatever order libusb found them in.
+void order_by_port(std::vector<Found>& devices);
+
 // Blocks of samples arrive on a thread of the vendor library. dropped
 // counts what the library itself lost before this block, in the same unit
 // as count.
