@@ -119,7 +119,8 @@ Fern-RTLSDR's: it walks libairspy's ladder of 22 presets (linearity, or
 sensitivity with `gain_mode`), choosing the highest that keeps the 12-bit
 converter out of clipping with 6 dB to spare, and steps down at once when
 something keeps clipping. It starts at preset 10. FernSDR's admin panel shows
-the share of clipped samples. A number holds one preset; `tuner` lets the
+the share of clipped samples, and as the gain the preset in use at a nominal
+3 dB a step above preset 0: Airspy publishes no gain in dB for its presets. A number holds one preset; `tuner` lets the
 R820T's own LNA and mixer AGC work, which watches the tuner and not the
 converter; `manual` sets the three stages from `lna_gain`, `mixer_gain` and
 `vga_gain`.

@@ -79,6 +79,20 @@ TEST(listing_describes_every_airspy) {
     CHECK(backend.last()->closed);
 }
 
+TEST(listing_does_not_open_serial_0_among_several) {
+    fake::Spec zero;
+    zero.serial = 0;
+    fake::Spec other;
+    other.serial = 0x7;
+    other.port = "1-3";
+    fake::Backend backend({zero, other});
+    const fern::Listing l = fern::list_devices(backend, std::chrono::milliseconds(2000));
+    const std::string text = fern::report_text(l.report);
+    CHECK_HAS(text, "\"usable\":false,\"error\":\"reports the serial number 0");
+    CHECK_HAS(text, "\"serial\":\"0000000000000007\",\"port\":\"1-3\",\"firmware\"");
+    CHECK_EQ(backend.opens(), 1);
+}
+
 TEST(listing_reports_usb_trouble) {
     fake::Backend backend;
     backend.enumeration_error = -99;

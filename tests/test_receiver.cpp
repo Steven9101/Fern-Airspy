@@ -270,6 +270,29 @@ TEST(receiver_opens_a_mini_with_its_own_crystal) {
                           "samples/s");
 }
 
+// Without its version string the model comes from the rates, since the
+// crystal the PLL is worked out with depends on it; when they do not tell,
+// the module does not guess.
+TEST(receiver_tells_r2_from_mini_without_a_version) {
+    fake::Spec quiet_mini = mini();
+    quiet_mini.fail_call = "version";
+    fake::Backend backend({quiet_mini});
+    fern::Receiver rx(backend);
+    REQUIRE(!rx.open(request(6000000, 100000000)));
+    CHECK(rx.info().model == fern::Model::mini);
+    CHECK_EQ(rx.info().xtal, 24000000u);
+    CHECK(rx.info().firmware.empty());
+    fake::Spec odd = r2();
+    odd.fail_call = "version";
+    odd.one_rates = {10000000, 3000000};
+    fake::Backend backend2({odd});
+    fern::Receiver rx2(backend2);
+    const auto f = rx2.open(request());
+    REQUIRE(f);
+    CHECK(f->code == ErrorCode::usb);
+    CHECK_HAS(f->message, "did not say whether it is an R2 or a Mini");
+}
+
 TEST(receiver_refuses_centres_the_pll_cannot_reach) {
     fake::Backend backend({r2()});
     fern::Receiver rx(backend);

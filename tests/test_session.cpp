@@ -453,13 +453,21 @@ TEST(session_brings_the_gain_down_when_the_converter_clips) {
     }
     CHECK_EQ(gain, std::string("linearity 8"));
     CHECK(most_clipping > 0.1);
+    // The module says it sets the gain itself: preset 8 at the ladder's
+    // nominal 3 dB a step.
+    REQUIRE(h.expect("stats").find("gain"));
     h.drain_samples(600);
     const Value settled = latest_stats(h);
     CHECK_EQ(settled.find("clipping")->as_number(), 0.0);
+    CHECK_EQ(settled.find("gain")->as_number(), 24.0);
     {
         std::lock_guard<std::mutex> lock(backend.last()->mutex);
         CHECK_EQ(backend.last()->gain, std::string("linearity 8"));
     }
+    // A preset of the operator's: no gain in the stats.
+    h.send("{\"type\":\"set\",\"id\":1,\"settings\":{\"gain\":5}}");
+    h.expect("applied");
+    CHECK(!latest_stats(h).find("gain"));
     h.send("{\"type\":\"stop\"}");
     CHECK_EQ(h.exit_status(), 0);
 }

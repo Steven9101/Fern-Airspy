@@ -40,7 +40,7 @@ std::string open_error(int r) {
     }
 }
 
-json::Value examine(Backend& backend, const Found& found, uint32_t index) {
+json::Value examine(Backend& backend, const Found& found, uint32_t index, size_t same_family) {
     json::Value d = json::Value::object();
     d.set("index", index);
     d.set("family", family_id(found.family));
@@ -53,6 +53,13 @@ json::Value examine(Backend& backend, const Found& found, uint32_t index) {
         d.set("usable", false);
         d.set("error", found.open_error != 0 ? open_error(found.open_error)
                                              : std::string("reports no serial number; unplug it and plug it in again"));
+        return d;
+    }
+    // The vendor libraries take serial 0 to mean the first device they find,
+    // which among several may be another one.
+    if (found.serial == 0 && same_family > 1) {
+        d.set("usable", false);
+        d.set("error", "reports the serial number 0, by which it cannot be told from the other Airspys");
         return d;
     }
     std::string firmware;
@@ -108,7 +115,10 @@ void list_into(Backend& backend, Shared& shared) {
     shared.changed.notify_all();
     if (e.error == 0) {
         for (uint32_t i = 0; i < e.devices.size(); ++i) {
-            json::Value d = examine(backend, e.devices[i], i);
+            size_t same_family = 0;
+            for (const Found& f : e.devices)
+                same_family += f.family == e.devices[i].family;
+            json::Value d = examine(backend, e.devices[i], i, same_family);
             {
                 std::lock_guard<std::mutex> lock(shared.mutex);
                 shared.devices.push_back(std::move(d));

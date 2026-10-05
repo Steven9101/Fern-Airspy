@@ -48,6 +48,10 @@ struct DeviceInfo {
 
 // The model of an R2 or Mini from its firmware's version string.
 Model one_model(const std::string& version);
+// The same from the sample rates it offers, when the version string cannot
+// be read: the R2's 10 and 2.5 Msps, the Mini's 6 and 3. Nothing when the
+// rates say neither.
+std::optional<Model> one_model_by_rates(const std::vector<uint32_t>& rates);
 // The model of an HF+ from its part id.
 Model hf_model(uint32_t board_id);
 

@@ -400,6 +400,14 @@ void Session::on_tick() {
             stats_received_ = received;
             stats_clipped_ = clipped;
         }
+        // Said so that FernSDR knows the module sets the gain itself and
+        // does not tell the operator to lower it. libairspy's presets have
+        // no published gain in dB; this is the ladder's nominal 3 dB a step
+        // (Receiver::ladder_steps()), above preset 0.
+        if (gain_control_) {
+            const std::vector<int> steps = receiver_.ladder_steps();
+            stats.set("gain", steps[static_cast<size_t>(receiver_.effective().preset_now)] / 10.0);
+        }
         if (!send(stats))
             return;
         next_stats_ += options_.stats_interval;

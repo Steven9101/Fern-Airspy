@@ -68,6 +68,18 @@ Model one_model(const std::string& version) {
     return version.find("MINI") != std::string::npos ? Model::mini : Model::r2;
 }
 
+std::optional<Model> one_model_by_rates(const std::vector<uint32_t>& rates) {
+    bool r2 = false;
+    bool mini = false;
+    for (uint32_t r : rates) {
+        r2 = r2 || r == 10000000 || r == 2500000;
+        mini = mini || r == 6000000 || r == 3000000;
+    }
+    if (r2 == mini)
+        return std::nullopt;
+    return r2 ? Model::r2 : Model::mini;
+}
+
 Model hf_model(uint32_t board_id) {
     switch (board_id) {
     case 1: return Model::hf_plus;
@@ -377,11 +389,21 @@ std::optional<Failure> Receiver::open_one(const OpenRequest& request, const Foun
     }
     one_ = std::move(device);
 
-    if (one_->version(info_.firmware) != 0)
-        info_.firmware.clear();
-    info_.model = one_model(info_.firmware);
     if ((r = one_->samplerates(info_.rates)) != 0 || info_.rates.empty())
         return usb_failure("reading the sample rates", r, false);
+    // The model decides the crystal the PLL is worked out with; a guess
+    // would put the band up to two PLL steps beside where it is announced.
+    if (one_->version(info_.firmware) == 0) {
+        info_.model = one_model(info_.firmware);
+    } else {
+        info_.firmware.clear();
+        const auto model = one_model_by_rates(info_.rates);
+        if (!model)
+            return Failure{ErrorCode::usb, "the Airspy with serial " + serial_text(found.serial) +
+                                               " did not say whether it is an R2 or a Mini; unplug it and plug it "
+                                               "in again"};
+        info_.model = *model;
+    }
     log_line("opened the %s with serial %s at USB port %s, firmware %s", model_name(info_.model),
              serial_text(info_.serial).c_str(), info_.port.empty() ? "(unknown)" : info_.port.c_str(),
              info_.firmware.empty() ? "(unknown)" : info_.firmware.c_str());

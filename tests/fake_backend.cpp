@@ -71,6 +71,8 @@ public:
     }
 
     int version(std::string& out) override {
+        if (failing("version"))
+            return one_error;
         out = spec_.version;
         return 0;
     }
